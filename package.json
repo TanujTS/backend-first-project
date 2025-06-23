@@ -21,7 +21,9 @@
     "content-disposition": "^1.0.0",
     "content-type": "^1.0.5",
     "cookie": "^0.7.2",
+    "cookie-parser": "^1.4.7",
     "cookie-signature": "^1.2.2",
+    "cors": "^2.8.5",
     "debug": "^4.4.1",
     "depd": "^2.0.0",
     "dotenv": "^16.5.0",
@@ -115,7 +117,6 @@
     "whatwg-url": "^14.2.0",
     "wrappy": "^1.0.2"
   },
-  "devDependencies": {},
   "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
@@ -131,4 +132,3 @@
   },
   "homepage": "https://github.com/TanujTS/backend-first-project#readme"
 }
-
