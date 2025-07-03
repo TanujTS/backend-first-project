@@ -14,7 +14,6 @@ import {
     updateUserCover
  } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { verify } from "jsonwebtoken";
 
 const router = Router();
 
@@ -37,7 +36,7 @@ router.route("/login").post(loginUser)
 
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser)
-router.route("/refresh-token").post(refreshAccessToken)
+router.route("/refresh-token"). post(refreshAccessToken)
 router.route("/change-passwprd").post(verifyJWT, changeCurrentPassword)
 router.route("/fetch-user").get(verifyJWT, getCurrentUser)
 router.route("/update-details").patch(verifyJWT, updateAccountDetails)
