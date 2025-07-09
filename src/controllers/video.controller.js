@@ -2,45 +2,53 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { ApiError } from "../utils/ApiError.js";
 
-/*
-const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit=10, query, sortBy, sortType, channel } = req.body
-    //TODO: get all videos based on query, sort, pagination
-    await Video.aggregate([
-        {
-            $match: {
-                $text: {
-                    $search: query,
-                }
+(async function() {
+    try {
+        const checkSearchIndex = await Video.listSearchIndexes();
+        if (checkSearchIndex.length > 0 && checkSearchIndex[0].name === 'mediax-default') {return}
+        await Video.createSearchIndex({
+        name: "mediax-default",
+        definition: {
+            "mappings": {
+                "dynamic": true
             }
-        },
+        }
+    })
+    } catch (error) {
+        throw new ApiError(500, "Could not generate search index.")
+    }
+})();
+
+
+
+const getAllVideos = asyncHandler(async (req, res) => {
+    //TODO: get all videos based on query, sort, pagination
+    // const { page = 1, limit=10, query, sortBy, sortType, channel } = req.body
+    const { query } = req.body
+    
+    const videos = await Video.aggregate([
         {
-            $lookup: {
-                from: "users",
-                localField: "owner",
-                foreignField: "_id",
-                as: "channel",
-                pipeline: [
-                    {
-                        $match: {
-                            username: channel,
-                        }
-                    },
-                    {
-                        $project: {
-                            username: 1,
-                            fullName: 1,
-                            coverImage: 1,
-                            avatar: 1
-                        }
-                    }
-                ]
+            $search: {
+                index: "mediax-default",
+                text: {
+                    query: query,
+                    path: ["title", "description"],
+                }
             }
         }
     ])
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, videos, "Videos fetched successfully!"
+        )
+    )
+
 })
-*/
+
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body
@@ -75,5 +83,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 
 export {
-    publishAVideo
+    publishAVideo,
+    getAllVideos
 }
