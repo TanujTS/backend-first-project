@@ -36,6 +36,10 @@ const videoSchema = new Schema({
     }
 }, {timestamps: true})
 
+// text index for searching in aggregation pipeline
+
+videoSchema.index({title: 'text', description: 'text'})
+
 videoSchema.plugin(mongooseAggregatePaginate)
 
 export const Video = mongoose.model("Video", videoSchema)

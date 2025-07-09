@@ -324,10 +324,10 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
                     $size: "$subscribers"
                 },
                 subscribedToCount: {
-                    $size: "$subscriptions"
+                    $size: "$subscribedTo"
                 },
                 isSubscribed: {
-                    $con :{
+                    $cond :{
                         if: {$in: [req.user?._id, "$subscribers.subscriber"]},
                         then: true,
                         else: false
@@ -380,12 +380,10 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                             as: "owner",
                             pipeline: [
                                 {
-                                    $lookup: {
-                                        $project: {
-                                            username: 1,
-                                            fullName: 1,
-                                            avatar: 1
-                                        }
+                                    $project: {
+                                        username: 1,
+                                        fullName: 1,
+                                        avatar: 1
                                     }
                                 },
                                 {
@@ -409,7 +407,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
         new ApiResponse(
             200,
             user[0].watchHistory,
-            "Watch History"
+            "Watch History fetched successfully!"
         )
     )
 })
