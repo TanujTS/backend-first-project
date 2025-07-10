@@ -25,10 +25,11 @@ import { ApiError } from "../utils/ApiError.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
     //TODO: get all videos based on query, sort, pagination
-    // const { page = 1, limit=10, query, sortBy, sortType, channel } = req.body
-    const { query } = req.body
+    // const { page = 1, limit=10, query, sortBy, sortType } = req.body
+    const { page = 1, limit = 10, query, sortBy, sortType } = req.query
     
-    const videos = await Video.aggregate([
+
+    const pipeline = [
         {
             $search: {
                 index: "mediax-default",
@@ -37,13 +38,27 @@ const getAllVideos = asyncHandler(async (req, res) => {
                     path: ["title", "description"],
                 }
             }
-        }
-    ])
+        },
+        {
+            $sort: {
+                [sortBy]: Number(sortType) //sortBy should be either duration/views/createdAt and sortType = 1, -1
+            }
+        },
+        "__PREPAGINATE__"
+    ]
+
+    const options = {
+        page, limit
+    }
+
+    const videos = await Video.aggregatePaginate(pipeline, options)
+
+
     return res
     .status(200)
     .json(
         new ApiResponse(
-            200, videos, "Videos fetched successfully!"
+            200, videos.docs, "Videos fetched unnsuccessfully!"
         )
     )
 
@@ -81,6 +96,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
     )
 })
 
+const getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    
+})
 
 export {
     publishAVideo,
