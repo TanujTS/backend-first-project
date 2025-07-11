@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiError } from "../utils/ApiError.js";
 
 (async function() {
@@ -58,7 +58,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     .status(200)
     .json(
         new ApiResponse(
-            200, videos.docs, "Videos fetched unnsuccessfully!"
+            200, videos.docs, "Videos fetched successfully!"
         )
     )
 
@@ -98,10 +98,92 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    
+    const video = await Video.findById(videoId);
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, video, "Video fetched successfully!"
+        )
+    )
+})
+
+const deleteVideo = asyncHandler(async(req, res) => {
+    const {videoId} = req.params
+    const deletedVid = Video.findByIdAndDelete(videoId);
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, {}, "Video deleted successfully!" 
+        )
+    )
+})
+
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    const { title, description } = req.body;
+    const video = await Video.findById(videoId);
+    console.log(`${video.owner._id} and ${req.user._id}`)
+    if (video.owner._id.toString() !== req.user._id.toString()) {
+        throw new ApiError(404, "user not authorized")
+    }
+
+    const thumbnail = req.file.path;
+    const newThumbnail = await uploadOnCloudinary(thumbnail)
+
+    await deleteFromCloudinary(video.thumbnail);
+
+    await Video.updateOne(
+        {_id: videoId},
+        {
+            $set: {
+                title,
+                description,
+                thumbnail: newThumbnail.url
+            }
+        }
+    )
+    const updatedVid = await Video.findById(videoId) 
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, updatedVid, "Video details updated successfully!"
+        )
+    )
+
+})
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    const video = await Video.findById(videoId);
+    if (video.owner._id.toString() !== req.user._id.toString()) {
+        throw new ApiError(404, "User is not authorized to perform this action.")
+    }
+
+    const toggledVid = await Video.findByIdAndUpdate(videoId,
+        {
+        $set: {
+            isPublished: !isPublished
+        }
+    },
+        {new: true}
+    )
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, toggledVid, "Publish status toggled successfully!"
+        )
+    )
 })
 
 export {
     publishAVideo,
-    getAllVideos
+    getAllVideos,
+    getVideoById,
+    deleteVideo,
+    updateVideo,
+    togglePublishStatus
 }
